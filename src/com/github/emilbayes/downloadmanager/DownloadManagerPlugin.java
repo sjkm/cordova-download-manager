@@ -128,6 +128,17 @@ public class DownloadManagerPlugin extends CordovaPlugin {
         req.setTitle(obj.optString("title"));
         req.setDescription(obj.optString("description"));
         req.setMimeType(obj.optString("mimeType", null));
+		
+		if (obj.has("allowWifi") || obj.has("allowMobile")) {
+			int allowedNetworkTypes = 0;
+			
+			if (obj.has("allowWifi")) allowedNetworkTypes |= DownloadManager.Request.NETWORK_WIFI;
+			if (obj.has("allowMobile")) allowedNetworkTypes |= DownloadManager.Request.NETWORK_MOBILE;
+			
+			Log.i("DownloadManagerPlugin", "Allowed Network Types set to: " + allowedNetworkTypes);
+			
+			req.setAllowedNetworkTypes(allowedNetworkTypes);
+		}
 
         if (obj.has("destinationInExternalFilesDir")) {
             Context context = cordova.getActivity()
