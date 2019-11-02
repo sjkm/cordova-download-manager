@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.pm.LauncherApps;
 import android.database.Cursor;
 import android.net.Uri;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -21,6 +24,7 @@ import java.util.Map;
 
 public class DownloadManagerPlugin extends CordovaPlugin {
     DownloadManager downloadManager;
+	ConnectivityManager connectivityManager;
 
     @Override
     public void initialize(final CordovaInterface cordova, final CordovaWebView webView) {
@@ -30,6 +34,11 @@ public class DownloadManagerPlugin extends CordovaPlugin {
                 .getApplication()
                 .getApplicationContext()
                 .getSystemService(Context.DOWNLOAD_SERVICE);
+		
+		connectivityManager = (ConnectivityManager) cordova.getActivity()
+                .getApplication()
+                .getApplicationContext()
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -44,12 +53,33 @@ public class DownloadManagerPlugin extends CordovaPlugin {
 
     protected boolean enqueue(JSONObject obj, CallbackContext callbackContext) throws JSONException {
         DownloadManager.Request req = deserialiseRequest(obj);
+		
+		if(obj.optBoolean("bindToWifi", true)) {
+			Log.i("DownloadManagerPlugin", "Binding to WIFI...");
+			
+			// Unbind the process from the network
+			connectivityManager.bindProcessToNetwork(null);
+			
+			// Bind the process to the network
+			connectivityManager.bindProcessToNetwork(getWifiNetwork())
+		}
 
         long id = downloadManager.enqueue(req);
 
         callbackContext.success(Long.toString(id));
 
         return true;
+    }
+	
+	private Network getWifiNetwork() {
+		Network[] networks = connectivityManager.getAllNetworks();
+		for(int i = 0; i < networks.length; i++) {
+			Network network = networks[i];
+			if (connectivityManager.getNetworkCapabilities(network).hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+				return networks[i];
+			}
+		}
+		return null;
     }
 
     protected boolean query(JSONObject obj, CallbackContext callbackContext) throws JSONException {
