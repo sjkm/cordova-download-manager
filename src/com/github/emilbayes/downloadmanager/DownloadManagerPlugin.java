@@ -61,7 +61,7 @@ public class DownloadManagerPlugin extends CordovaPlugin {
 			connectivityManager.bindProcessToNetwork(null);
 			
 			// Bind the process to the network
-			connectivityManager.bindProcessToNetwork(getWifiNetwork())
+			connectivityManager.bindProcessToNetwork(getWifiNetwork());
 		}
 
         long id = downloadManager.enqueue(req);
